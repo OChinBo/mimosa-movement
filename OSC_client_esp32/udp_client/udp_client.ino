@@ -6,10 +6,8 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <OSCMessage.h>
-//char ssid[] = "hub_1";         
-//char pass[] = "32013201";    
-char ssid[] = "Chung-2.4G";         
-char pass[] = "20783068";      
+char ssid[] = "hub_1";         
+char pass[] = "32013201";       
 WiFiUDP Udp;       
 
 //debug

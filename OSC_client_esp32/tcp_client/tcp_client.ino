@@ -4,8 +4,8 @@
 #include <ArduinoJson.h>
 #include <OSCMessage.h>
 
-const char *ssid = "Chung-2.4G";
-const char *password = "20783068";
+const char *ssid = "hub_1";
+const char *password = "32013201";
 const char *oscAddress = "/mimosa04";
 
 const IPAddress serverIP(192,168,0,14);
