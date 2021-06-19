@@ -43,7 +43,7 @@ class MainWindow:
     def __init__(self, mode='normal'):
         print("-----Start initialize QT Window-----")
         # Initialize Data
-        self._timewindow = 1500
+        self._timewindow = 500
         self._bufsize = self._timewindow + 10
         self.databuffer01 = collections.deque([0.0] * self._bufsize, self._bufsize)
         self.databuffer02 = collections.deque([0.0] * self._bufsize, self._bufsize)
@@ -92,14 +92,14 @@ class MainWindow:
     def update_plot(self, data, address=''):
 
         if address == '/mimosa04':
-            print('~~~~~~~')
+            # print('~~~~~~~')
             self.databuffer01.append(data)
             self.y01 = list(itertools.islice(self.databuffer01, 10, None))
             self.y01 = np.array(self.y01)
             assert len(self.y01) == self._timewindow
             # self.curve01.setData(self.x, self.y01)
         elif address == '/mimosa09':
-            print('____________________________')
+            # print('____________________________')
             self.databuffer02.append(data)
             self.y02 = list(itertools.islice(self.databuffer02, 10, None))
             self.y02 = np.array(self.y02)

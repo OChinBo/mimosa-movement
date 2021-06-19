@@ -17,7 +17,7 @@ import itertools
 
 class DynamicPlotter:
 
-    def __init__(self, timewindow=1500):
+    def __init__(self, timewindow=500):
         print("-----Start initialize DynamicPlotter-----")
         # Data stuff
         self._timewindow = timewindow
@@ -62,7 +62,7 @@ class DynamicPlotter:
 
         # Middle graph 中間電波圖
         self.plt = pg.PlotWidget()
-        self.plt.resize(800, 600)
+        # self.plt.resize(800, 600)
         self.plt.showGrid(x=True, y=True)
         self.plt.setLabel('left', 'amplitude', 'V')
         self.plt.setLabel('bottom', 'time', 's')
@@ -89,14 +89,14 @@ class DynamicPlotter:
         self.slider_savgol_window_length = QSlider(QtCore.Qt.Horizontal)
         self.slider_savgol_window_length.setRange(1, self._timewindow - ((self._timewindow + 1) & 1))
         self.slider_savgol_window_length.setSingleStep(2)
-        self.slider_savgol_window_length.setValue(65)
+        self.slider_savgol_window_length.setValue(71)
         self.slider_savgol_window_length.valueChanged.connect(self.preprocess_savgol_window_length)
         self.label_savgol_window_length = QLabel(
             'window_length:{}\t'.format(self.slider_savgol_window_length.value()))
         self.right_form.addRow(self.label_savgol_window_length, self.slider_savgol_window_length)
         # Savgol polyorder
         self.slider_savgol_polyorder = QSlider(QtCore.Qt.Horizontal)
-        self.slider_savgol_polyorder.setRange(1, 20)
+        self.slider_savgol_polyorder.setRange(1, 10)
         self.slider_savgol_polyorder.setValue(2)
         self.slider_savgol_polyorder.valueChanged.connect(self.preprocess_savgol_polyorder)
         self.label_savgol_polyorder = QLabel('polyorder:{}\t'.format(self.slider_savgol_polyorder.value()))
@@ -149,10 +149,9 @@ class DynamicPlotter:
         self.win.show()
 
         # QTimer
-        # self.timer = QtCore.QTimer()
-        # self.timer.timeout.connect(self.update_plot)
-        # self.timer.start(self._interval)
-        # self.timer.start()
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.app.processEvents)
+        self.timer.start()
         print("-----Finish initialize DynamicPlotter-----")
 
     def pause(self):
@@ -247,7 +246,8 @@ class DynamicPlotter:
         We do all calculate fix on self.y
         Source data is in databuffer
         """
-        self.databuffer.append(data)
+        if data:
+            self.databuffer.append(data)
 
         if not self.PAUSE:
             self.count_dots += 1
@@ -256,22 +256,28 @@ class DynamicPlotter:
             if self.FLAG_DIFFERENCE > 0:
                 diff_tmp = np.diff(list(self.databuffer), n=self.FLAG_DIFFERENCE)
                 self.y = diff_tmp[-self._timewindow:]
-                assert len(self.y) == self._timewindow
+                # assert len(self.y) == self._timewindow
 
             if self.FLAG_SAVGOL:
+                win_val = self.slider_savgol_window_length.value()
+                pol_val = self.slider_savgol_polyorder.value()
                 try:
+                    if (win_val & 1) == 0:
+                        self.slider_savgol_window_length.setValue(win_val + 1)
+                        self.preprocess_savgol_window_length()
+                    if pol_val >= win_val:
+                        self.slider_savgol_polyorder.setValue(win_val - 1)
+                        self.preprocess_savgol_polyorder()
                     self.y = savgol_filter(self.y,
                                            self.slider_savgol_window_length.value(),
                                            self.slider_savgol_polyorder.value())
                 except Exception as e:
                     print(e.with_traceback())
-                    win_val = self.slider_savgol_window_length.value()
-                    pol_val = self.slider_savgol_polyorder.value()
                     print(win_val, pol_val)
-                    self.slider_savgol_window_length.setValue(win_val - 1)
-                    os.system('pause')
+                    self.update_plot()
+                    # os.system('pause')
 
-                assert len(self.y) == self._timewindow
+                # assert len(self.y) == self._timewindow
 
             self.y = np.array(self.y)
             self.curve.setData(self.x, self.y)
