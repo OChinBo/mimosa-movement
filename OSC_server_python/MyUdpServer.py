@@ -26,9 +26,8 @@ class MyUdpServer:
         Otherwise usage is identical to blocking type.
         Use for lightweight message handlers.
         """
+        print("Create Threading Server")
         self.SERVER = osc_server.ThreadingOSCUDPServer((self.IP, self.PORT), self.DP)
-        print("Serving on {}".format(self.SERVER.server_address))
-        # server.serve_forever()
 
     def create_blocking_server(self):
         """
@@ -37,6 +36,7 @@ class MyUdpServer:
         This type is good enough if your application is very simple and only has to react to OSC messages coming in and
         nothing else.
         """
+        print("Create Blocking Server")
         self.SERVER = osc_server.BlockingOSCUDPServer((self.IP, self.PORT), self.DP)
 
     def create_async_exclusive_server(self):

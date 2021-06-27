@@ -4,8 +4,10 @@
 #include <ArduinoJson.h>
 #include <OSCMessage.h>
 
-const char *ssid = "hub_1";
-const char *password = "32013201";
+//const char *ssid = "hub1";
+//const char *password = "32013201";
+const char *ssid = "Chung-2.4G";
+const char *password = "20783068";
 const char *oscAddress = "/mimosa04";
 
 const IPAddress serverIP(192,168,0,14);
@@ -18,12 +20,14 @@ WiFiClient client;
 void setup(){
     Serial.begin(115200);
     connectWifi();
-    analogReadResolution(16);
+    analogReadResolution(8);
     delay(1000);
 }
 
 void loop(){
-    Serial.println("嘗試訪問伺服器");
+    Serial.println("嘗試訪問伺服器:");
+    Serial.println(serverIP);
+    
     if (client.connect(serverIP, serverPort)){ //嘗試訪問目標地址
     
         Serial.println("訪問成功");

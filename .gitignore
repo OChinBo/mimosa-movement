@@ -12,6 +12,11 @@ OSC_server_python/model/*
 OSC_server_python/jupyter/refer
 OSC_client_esp32/readme.txt
 
+# test stuff
+research.txt
+train_data_UU.csv
+fft-test
+model
 
 
 

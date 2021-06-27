@@ -15,8 +15,8 @@ import collections
 import socket
 
 # Config
-IP = '192.168.0.14'
-PORT = 5589
+# IP = '192.168.0.14'
+# PORT = 5589
 PAUSE_TIME = 0.0000001  # Frequency of plots update. Must be greater than zero.
 FLAG_MA = False
 

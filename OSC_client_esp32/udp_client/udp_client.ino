@@ -6,12 +6,14 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <OSCMessage.h>
-char ssid[] = "hub_1";         
-char pass[] = "32013201";       
+char ssid[] = "hub1";         
+char pass[] = "32013201";  
+//char ssid[] = "Chung-2.4G";         
+//char pass[] = "20783068"; 
 WiFiUDP Udp;       
 
 //debug
-const IPAddress outIp(192,168,0,14);     
+const IPAddress outIp(192,168,3,3);     
 const unsigned int outPort = 5589;          
 const unsigned int localPort = 7777;  
 const int sensorPin = 34;

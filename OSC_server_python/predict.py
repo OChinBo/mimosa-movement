@@ -13,17 +13,18 @@ import json
 import joblib
 import numpy as np
 from pythonosc import dispatcher
-import collections
-import multiprocessing
-from multiprocessing import Process
-from multiprocessing.managers import BaseManager
+# import collections
+# import multiprocessing
+# from multiprocessing import Process
+# from multiprocessing.managers import BaseManager
 import socket
 from threading import Thread
 
 # from sklearn.preprocessing import StandardScaler
 
 # Config
-IP = '192.168.0.14'
+# IP = '192.168.0.14'
+IP = '192.168.3.3'
 PORT = 5589
 PAUSE_TIME = 0.0000001  # Frequency of plots update. Must be greater than zero.
 FLAG_MA = False

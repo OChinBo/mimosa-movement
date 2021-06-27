@@ -7,6 +7,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 from PyQt5.QtWidgets import *
 
 import json
+import gc
 import collections
 from time import gmtime, strftime
 import numpy as np
@@ -15,26 +16,35 @@ from scipy.signal import savgol_filter
 import itertools
 
 
+
 class DynamicPlotter:
 
     def __init__(self, timewindow=500):
         print("-----Start initialize DynamicPlotter-----")
         # Data stuff
         self._timewindow = timewindow
-        self._bufsize = timewindow + 10
+        self._diff_preserve = 1
+        self._bufsize = timewindow + self._diff_preserve
         self.databuffer = collections.deque([0.0] * self._bufsize, self._bufsize)
         self.x = np.linspace(0.0, self._timewindow, self._timewindow)
         self.y = np.zeros(self._timewindow, dtype=np.float)
 
-        # Flags and other stuff
+        # Pre-process and other monitor stuff
         self.time0 = time.time()  # dps
         self.count_dots = 0  # dps
         self.count_dots0 = 0  # dps
+        self.arr_diff = collections.deque([0.0] * self._timewindow, self._timewindow)  # difference buffer
         self.tag = None  # labels radio-button
         self.PAUSE = False
-        self.FLAG_DIFFERENCE = 0  # 差分
+        self.FLAG_DIFFERENCE = False  # 差分
         self.FLAG_SAVGOL = False
         self.FLAG_DPS = True
+        self.FLAG_GC = False
+
+        # gc
+        if self.FLAG_GC:
+            gc.set_threshold(100, 10, 10)
+            print("gc_threshold:", gc.get_threshold())
 
         # PyQtGraph stuff
         self.app = QApplication.instance()
@@ -64,6 +74,8 @@ class DynamicPlotter:
         self.plt = pg.PlotWidget()
         # self.plt.resize(800, 600)
         self.plt.showGrid(x=True, y=True)
+        self.plt.setDownsampling(auto=True)
+        self.plt.setClipToView(True)
         self.plt.setLabel('left', 'amplitude', 'V')
         self.plt.setLabel('bottom', 'time', 's')
         self.curve = self.plt.plot(self.x, self.y, pen=(0, 0, 255))
@@ -72,11 +84,14 @@ class DynamicPlotter:
         self.right_form = QFormLayout()
 
         # Difference
-        self.slider_difference = QSlider(QtCore.Qt.Horizontal)
-        self.slider_difference.setRange(0, 2)
-        self.slider_difference.valueChanged.connect(self.preprocess_difference)
-        self.label_difference = QLabel('差分:' + str(self.slider_difference.value()) + "\t")
-        self.right_form.addRow(self.label_difference, self.slider_difference)
+        self.checkbox_difference = QCheckBox()
+        self.checkbox_difference.stateChanged.connect(self.preprocess_difference)
+        self.right_form.addRow(QLabel('差分:'), self.checkbox_difference)
+        # self.slider_difference = QSlider(QtCore.Qt.Horizontal)
+        # self.slider_difference.setRange(0, 2)
+        # self.slider_difference.valueChanged.connect(self.preprocess_difference)
+        # self.label_difference = QLabel('差分:' + str(self.slider_difference.value()) + "\t")
+        # self.right_form.addRow(self.label_difference, self.slider_difference)
 
         self.right_form.addWidget(QLabel(' '))  # blank line
         self.right_form.addWidget(QLabel(' '))  # blank line
@@ -85,11 +100,13 @@ class DynamicPlotter:
         self.checkbox_savgol = QCheckBox()
         self.checkbox_savgol.stateChanged.connect(self.preprocess_savgol)
         self.right_form.addRow(QLabel('Savitzky-Golay'), self.checkbox_savgol)
+        if self.FLAG_SAVGOL:
+            self.checkbox_savgol.setChecked(True)
         # Savgol window_length
         self.slider_savgol_window_length = QSlider(QtCore.Qt.Horizontal)
         self.slider_savgol_window_length.setRange(1, self._timewindow - ((self._timewindow + 1) & 1))
         self.slider_savgol_window_length.setSingleStep(2)
-        self.slider_savgol_window_length.setValue(71)
+        self.slider_savgol_window_length.setValue(83)
         self.slider_savgol_window_length.valueChanged.connect(self.preprocess_savgol_window_length)
         self.label_savgol_window_length = QLabel(
             'window_length:{}\t'.format(self.slider_savgol_window_length.value()))
@@ -112,8 +129,8 @@ class DynamicPlotter:
         # save
         self.save_button = QPushButton('Save')
         self.save_button.clicked.connect(self.save_data)
-        self.right_form.addRow(self.pause_button, self.save_button)
-
+        self.right_form.addRow(self.pause_button)
+        self.right_form.addRow(self.save_button)
         self.right_form.addWidget(QLabel(' '))  # blank line
 
         # Tag radio button
@@ -137,21 +154,29 @@ class DynamicPlotter:
         self.right_form.addRow(self.radiobtn_touching)
 
         # Global hbox
-        self.hbox = QHBoxLayout()
-        self.hbox.addStretch(1)
-        self.hbox.addLayout(self.left_vbox)
-        self.hbox.addWidget(self.plt)
-        self.hbox.addLayout(self.right_form)
-        self.hbox.addStretch(1)
+        # self.hbox = QHBoxLayout()
+        # self.hbox.addStretch(1)
+        # self.hbox.addLayout(self.left_vbox)
+        # self.hbox.addWidget(self.plt)
+        # self.hbox.addLayout(self.right_form)
+        # self.hbox.addStretch(1)
 
-        self.win.setLayout(self.hbox)
+        self.grid_layout = QGridLayout()
+        self.grid_layout.addLayout(self.left_vbox, 0, 0, 1, 1)
+        self.grid_layout.addWidget(self.plt, 0, 1, 1, 1)
+        self.grid_layout.addLayout(self.right_form, 0, 2, 1, 1)
+
+        # self.win.setLayout(self.hbox)
+        self.win.setLayout(self.grid_layout)
         self.win.setWindowTitle('Dynamic Plotting with PyQtGraph')
         self.win.show()
 
         # QTimer
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.app.processEvents)
-        self.timer.start()
+        if self.FLAG_GC:
+            self.timer = QtCore.QTimer()
+            # self.timer.timeout.connect(self.app.processEvents)
+            self.timer.timeout.connect(self.gc_collect)
+            self.timer.start(5000)
         print("-----Finish initialize DynamicPlotter-----")
 
     def pause(self):
@@ -195,16 +220,17 @@ class DynamicPlotter:
         print("savgol_polyorder:{}".format(self.slider_savgol_polyorder.value()))
         self.update_plot()
 
-    def preprocess_difference(self, value):
-        self.label_difference.setText('差分:' + str(value) + "\t")
-        self.FLAG_DIFFERENCE = value
-        print("Difference level:" + str(self.FLAG_DIFFERENCE))
-
-    def get_dps(self):
-        self.time0 = time.time()
-        dps = self.count_dots - self.count_dots0
-        self.count_dots0 = self.count_dots
-        return dps
+    def preprocess_difference(self, state):
+        if QtCore.Qt.Checked == state:
+            print("difference selected.")
+            self.FLAG_DIFFERENCE = True
+        else:
+            print("difference canceled.")
+            self.FLAG_DIFFERENCE = False
+            # self.arr_diff = None  # reset arr_diff
+        # self.label_difference.setText('差分:' + str(value) + "\t")
+        # self.FLAG_DIFFERENCE = value
+        # print("Difference level:" + str(self.FLAG_DIFFERENCE))
 
     def onClickedTag(self):
         if self.radiobtn_none.isChecked():
@@ -216,12 +242,22 @@ class DynamicPlotter:
         elif self.radiobtn_touching.isChecked():
             self.tag = 'touching'
 
+    def get_dps(self):
+        self.time0 = time.time()
+        dps = self.count_dots - self.count_dots0
+        self.count_dots0 = self.count_dots
+        return dps
+
+    def gc_collect(self):
+        print("[gc] collect:", gc.collect())
+
     def save_data(self):
         path = "./data/{}/".format(self.tag if self.tag else '')
         file_name = strftime("%Y-%m-%d_%H-%M-%S", gmtime())
         save_path = path + file_name + '.csv'
 
-        data = self.y.tolist()
+        data = list(self.databuffer)  # save raw data
+        # data = self.y.tolist()  # save pre-process data
         if self.tag:
             data.append(self.tag)
         df = pd.DataFrame([data], dtype=str)
@@ -234,45 +270,48 @@ class DynamicPlotter:
             json_obj = json.loads(obj)
             addr = json_obj['address']
             data = json_obj['data']
-            self.append_data(addr, data)
-
-    def append_data(self, address, *args):
-        # print(address, args)
-        data = args[0]
-        self.update_plot(data, address)
+            self.update_plot(data, addr)
 
     def update_plot(self, data=None, address=None):
         """
         We do all calculate fix on self.y
         Source data is in databuffer
         """
+        # print("update_plot:", data)
         if data:
+            self.arr_diff.append(data - self.databuffer[-1])
             self.databuffer.append(data)
 
         if not self.PAUSE:
             self.count_dots += 1
-            self.y = list(itertools.islice(self.databuffer, 10, None))  # get last windowsize elements
+            self.y = list(itertools.islice(self.databuffer, self._diff_preserve, None))  # get last windowsize elements
 
-            if self.FLAG_DIFFERENCE > 0:
-                diff_tmp = np.diff(list(self.databuffer), n=self.FLAG_DIFFERENCE)
-                self.y = diff_tmp[-self._timewindow:]
+            if self.FLAG_DIFFERENCE:
+                # if self.arr_diff is None:
+                #     self.arr_diff = np.diff(self.databuffer)
+                #     self.arr_diff = collections.deque(self.arr_diff, self._timewindow)
+                # else:
+                #     self.arr_diff.append(data - self.databuffer[-2])
+                self.y = self.arr_diff
+                # arr_diff = np.diff(list(self.databuffer), n=self.FLAG_DIFFERENCE)
+                # self.y = self.arr_diff[-self._timewindow:]
                 # assert len(self.y) == self._timewindow
 
             if self.FLAG_SAVGOL:
                 win_val = self.slider_savgol_window_length.value()
                 pol_val = self.slider_savgol_polyorder.value()
                 try:
-                    if (win_val & 1) == 0:
+                    if (win_val & 1) == 0:  # window-length must be odd
                         self.slider_savgol_window_length.setValue(win_val + 1)
                         self.preprocess_savgol_window_length()
-                    if pol_val >= win_val:
+                    if pol_val >= win_val:  # polyorder must smaller than window-length
                         self.slider_savgol_polyorder.setValue(win_val - 1)
                         self.preprocess_savgol_polyorder()
                     self.y = savgol_filter(self.y,
                                            self.slider_savgol_window_length.value(),
                                            self.slider_savgol_polyorder.value())
                 except Exception as e:
-                    print(e.with_traceback())
+                    print(e.with_traceback(sys.exc_info()[2]))
                     print(win_val, pol_val)
                     self.update_plot()
                     # os.system('pause')
@@ -291,7 +330,8 @@ class DynamicPlotter:
         self.app.processEvents()
 
     def run(self):
-        self.app.exec_()
+        print("Running Plot")
+        return self.app.exec_()
 
 
 if __name__ == '__main__':
