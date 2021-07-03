@@ -13,21 +13,16 @@ class MyTcpServer(Thread):
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind((ip, port))
         self.s.listen(10)
-        self.handler = handler
-        # if self.handler == 'local':
-        #     self.local_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #     self.local_socket.connect(('localhost', 5590))
 
         self.sockets = []
-        # self.handler = handler
         self.t = threading.Thread(target=self.handle)
 
         print('server start at: %s:%s' % (ip, port))
         print('wait for connection...')
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self.handler == 'local':
-            self.local_socket.close()
+    # def __exit__(self, exc_type, exc_value, traceback):
+    #     if self.handler == 'local':
+    #         self.local_socket.close()
 
     def handle(self):
         while True:
@@ -47,10 +42,6 @@ class MyTcpServer(Thread):
                 json_data = re.findall('{.*?}', json_data)  # array of str:json
 
                 self.window.tcp_handler(json_data)
-                # if self.handler == 'local':
-                #     self.local_socket.send(recv_data)
-                # elif self.handler:  # json handler
-                #     self.handler(json_data)
 
     def run(self):
         self.t.start()

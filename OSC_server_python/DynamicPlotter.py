@@ -20,7 +20,7 @@ class DynamicPlotter:
 
     def __init__(self, timewindow=500):
         print("-----Start initialize DynamicPlotter-----")
-        # Data stuff
+        # QT Data stuff
         self._timewindow = timewindow
         self._diff_preserve = 1
         self._bufsize = timewindow + self._diff_preserve

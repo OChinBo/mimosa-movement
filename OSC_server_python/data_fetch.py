@@ -18,17 +18,27 @@ PORT = 5589
 dy_plot = None  # Initializing DynamicPlotter
 
 
+def excepthook(exc_type, exc_value, exc_tb):
+    """
+    For Exception traceback
+    """
+    tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+    print("error catched!:")
+    print("error message:\n", tb)
+    QtWidgets.QApplication.quit()
+
+
 def udp_handler(_address, *args):
     # print(_address, args)
     data = args[0]
     dy_plot.update_plot(data)
 
 
-def tcp_handler(json_input):
-    for obj in json_input:
-        json_obj = json.loads(obj)
-        data = json_obj['data']
-        dy_plot.update_plot(data)
+# def tcp_handler(json_input):
+#     for obj in json_input:
+#         json_obj = json.loads(obj)
+#         data = json_obj['data']
+#         dy_plot.update_plot(data)
 
 
 def run_udp_server():
@@ -53,13 +63,6 @@ def run_tcp_server():
     ret = dy_plot.run()
     print("event loop exited")
     sys.exit(ret)
-
-
-def excepthook(exc_type, exc_value, exc_tb):
-    tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
-    print("error catched!:")
-    print("error message:\n", tb)
-    QtWidgets.QApplication.quit()
 
 
 if __name__ == "__main__":

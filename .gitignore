@@ -10,6 +10,7 @@ ipython_config.py
 OSC_server_python/data/*
 OSC_server_python/model/*
 OSC_server_python/jupyter/refer
+OSC_server_python/jupyter/data
 OSC_client_esp32/readme.txt
 
 # test stuff
