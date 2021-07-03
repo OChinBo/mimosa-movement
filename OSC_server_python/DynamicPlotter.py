@@ -16,7 +16,6 @@ from scipy.signal import savgol_filter
 import itertools
 
 
-
 class DynamicPlotter:
 
     def __init__(self, timewindow=500):
@@ -106,7 +105,7 @@ class DynamicPlotter:
         self.slider_savgol_window_length = QSlider(QtCore.Qt.Horizontal)
         self.slider_savgol_window_length.setRange(1, self._timewindow - ((self._timewindow + 1) & 1))
         self.slider_savgol_window_length.setSingleStep(2)
-        self.slider_savgol_window_length.setValue(83)
+        self.slider_savgol_window_length.setValue(85)
         self.slider_savgol_window_length.valueChanged.connect(self.preprocess_savgol_window_length)
         self.label_savgol_window_length = QLabel(
             'window_length:{}\t'.format(self.slider_savgol_window_length.value()))
@@ -177,6 +176,11 @@ class DynamicPlotter:
             # self.timer.timeout.connect(self.app.processEvents)
             self.timer.timeout.connect(self.gc_collect)
             self.timer.start(5000)
+        self.timer = QtCore.QTimer()
+        # self.timer.timeout.connect(self.app.processEvents)
+        self.timer.timeout.connect(self.update_plot)
+        self.timer.start()
+
         print("-----Finish initialize DynamicPlotter-----")
 
     def pause(self):
@@ -270,17 +274,18 @@ class DynamicPlotter:
             json_obj = json.loads(obj)
             addr = json_obj['address']
             data = json_obj['data']
-            self.update_plot(data, addr)
+            self.append_data(data, addr)
 
-    def update_plot(self, data=None, address=None):
+    def append_data(self, data, address=None):
+        # print("append_data:", data)
+        self.arr_diff.append(data - self.databuffer[-1])
+        self.databuffer.append(data)
+
+    def update_plot(self):
         """
         We do all calculate fix on self.y
         Source data is in databuffer
         """
-        # print("update_plot:", data)
-        if data:
-            self.arr_diff.append(data - self.databuffer[-1])
-            self.databuffer.append(data)
 
         if not self.PAUSE:
             self.count_dots += 1

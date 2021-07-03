@@ -92,6 +92,12 @@ def predict(method='model'):
         if model is None:
             model = joblib.load('./model/model.pkl')
 
+        ## Check if data all same
+        # result = np.all(arr == arr[0])
+        # if result:
+        #     print("nothing")
+        #     print('All Values in Array are same / equal')
+
         data = standardize()
         p = model.predict(data)
 

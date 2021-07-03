@@ -54,11 +54,13 @@ def run_tcp_server():
     print("event loop exited")
     sys.exit(ret)
 
+
 def excepthook(exc_type, exc_value, exc_tb):
     tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
     print("error catched!:")
     print("error message:\n", tb)
     QtWidgets.QApplication.quit()
+
 
 if __name__ == "__main__":
     # run_udp_server()
