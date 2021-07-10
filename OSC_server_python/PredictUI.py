@@ -16,7 +16,7 @@ from sklearn.preprocessing import LabelEncoder
 
 # Config
 model_path = "model/LSTM_0707_std_sv85_2_acc91.h5"
-sc_path = "scaler/a9_03_clean.csv"  # Choose model's training data.
+sc_path = "scaler/0707_clean.csv"  # Choose model's training data.
 LABELS = ["nothing", "passing", "touching"]
 savgol_window_length = 85
 savgol_polyorder = 2

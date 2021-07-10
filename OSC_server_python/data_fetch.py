@@ -8,7 +8,7 @@ import traceback
 from pythonosc import dispatcher
 
 # IP Config
-IP = '192.168.0.14'
+IP = '192.168.0.16'
 # IP = '192.168.3.3'
 PORT = 5589
 
