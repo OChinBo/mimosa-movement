@@ -15,20 +15,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import LabelEncoder
 
 # Config
-model_path = "model/LSTM_a9_03_std_sv85_2.h5"
-sc_path = "scaler/a9_03_clean.csv"
+model_path = "model/LSTM_0707_std_sv85_2_acc91.h5"
+sc_path = "scaler/a9_03_clean.csv"  # Choose model's training data.
 LABELS = ["nothing", "passing", "touching"]
 savgol_window_length = 85
 savgol_polyorder = 2
-
-
-# sc_max = -np.inf
-# sc_min = np.inf
-# labels = {
-#     "a": "nothing",
-#     "b": "passing",
-#     "c": "touching"
-# }
 
 
 class PredictUI:
@@ -51,7 +42,7 @@ class PredictUI:
         self.y01 = np.zeros(self._timewindow, dtype=np.float)
         self.y02 = np.zeros(self._timewindow, dtype=np.float)
 
-        ## Preprocess and model stuff
+        # Preprocess and model stuff
         # Load model
         self.model = None
         if self.mode == "model":
@@ -152,7 +143,7 @@ class PredictUI:
         if self.mode == "model":
             data = self.preprocess(data)
 
-            # reshape to feed model
+            # Reshape to feed model
             if isinstance(data, np.ndarray):
                 x_test_reshape = data.reshape((data.shape[0], 1, data.shape[1]))
             else:
@@ -160,6 +151,10 @@ class PredictUI:
             pred = self.model.predict(x_test_reshape, batch_size=64, verbose=0)
             pred_bool = np.argmax(pred, axis=1)
             pred = self.le.inverse_transform(pred_bool)
+        elif self.mode == "threshold":
+            # TODO
+            pass
+
         return pred
 
     def tcp_handler(self, json_input):
@@ -181,12 +176,12 @@ class PredictUI:
     def update_plot(self):
 
         self.y01 = list(itertools.islice(self.databuffer01, self._diff_preserve, None))
+        # self.y01 = savgol_filter(self.y01, savgol_window_length, savgol_polyorder)
         self.y01 = np.array(self.y01)
-        # assert len(self.y01) == self._timewindow
 
         self.y02 = list(itertools.islice(self.databuffer02, self._diff_preserve, None))
+        # self.y02 = savgol_filter(self.y02, savgol_window_length, savgol_polyorder)
         self.y02 = np.array(self.y02)
-        # assert len(self.y02) == self._timewindow
 
         self.curve01.setData(self.x, self.y01)
         self.curve02.setData(self.x, self.y02)

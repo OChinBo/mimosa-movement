@@ -2,12 +2,9 @@ from MyUdpServer import MyUdpServer
 from MyTcpServer import MyTcpServer
 from DynamicPlotter import DynamicPlotter
 
-from PyQt5.QtWidgets import QApplication
 from PyQt5 import QtWidgets
 import sys
-import numpy as np
 import traceback
-import json
 from pythonosc import dispatcher
 
 # IP Config
@@ -32,13 +29,6 @@ def udp_handler(_address, *args):
     # print(_address, args)
     data = args[0]
     dy_plot.update_plot(data)
-
-
-# def tcp_handler(json_input):
-#     for obj in json_input:
-#         json_obj = json.loads(obj)
-#         data = json_obj['data']
-#         dy_plot.update_plot(data)
 
 
 def run_udp_server():

@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 
@@ -125,6 +124,7 @@ class DynamicPlotter:
         # Pause
         self.pause_button = QPushButton('Pause')
         self.pause_button.clicked.connect(self.pause)
+
         # save
         self.save_button = QPushButton('Save')
         self.save_button.clicked.connect(self.save_data)
@@ -152,20 +152,14 @@ class DynamicPlotter:
         self.right_form.addRow(self.radiobtn_passing)
         self.right_form.addRow(self.radiobtn_touching)
 
-        # Global hbox
-        # self.hbox = QHBoxLayout()
-        # self.hbox.addStretch(1)
-        # self.hbox.addLayout(self.left_vbox)
-        # self.hbox.addWidget(self.plt)
-        # self.hbox.addLayout(self.right_form)
-        # self.hbox.addStretch(1)
-
         self.grid_layout = QGridLayout()
         self.grid_layout.addLayout(self.left_vbox, 0, 0, 1, 1)
         self.grid_layout.addWidget(self.plt, 0, 1, 1, 1)
         self.grid_layout.addLayout(self.right_form, 0, 2, 1, 1)
+        self.grid_layout.setColumnStretch(0, 0)
+        self.grid_layout.setColumnStretch(1, 1)
+        self.grid_layout.setColumnStretch(2, 0)
 
-        # self.win.setLayout(self.hbox)
         self.win.setLayout(self.grid_layout)
         self.win.setWindowTitle('Dynamic Plotting with PyQtGraph')
         self.win.show()

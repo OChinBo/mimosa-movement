@@ -10,7 +10,7 @@ const char *ssid = "Chung-2.4G";
 const char *password = "20783068";
 const char *oscAddress = "/mimosa09";
 
-const IPAddress serverIP(192,168,0,14);
+const IPAddress serverIP(192,168,0,16);
 uint16_t serverPort = 5589;
 const int sensorPin = 34;
 

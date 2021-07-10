@@ -6,7 +6,7 @@ import re
 
 class MyTcpServer(Thread):
 
-    def __init__(self, ip, port, window, handler='classic'):
+    def __init__(self, ip, port, window):
         Thread.__init__(self)
         self.window = window
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,8 +21,7 @@ class MyTcpServer(Thread):
         print('wait for connection...')
 
     # def __exit__(self, exc_type, exc_value, traceback):
-    #     if self.handler == 'local':
-    #         self.local_socket.close()
+    #     self.local_socket.close()
 
     def handle(self):
         while True:
@@ -50,12 +49,3 @@ class MyTcpServer(Thread):
             print('connected by ' + str(addr))
             conn.setblocking(0)
             self.sockets.append(conn)
-
-
-if __name__ == "__main__":
-    # Receive data form IP, then send to local port
-    IP = '192.168.0.14'
-    PORT = 5589
-
-    server = MyTcpServer(IP, PORT, 'local')
-    server.start()
